@@ -7,18 +7,23 @@ export default {
 }
 
 class Server {
-    constructor(baseUrl, token) {
+    constructor(baseUrl, localStorageTokenKey) {
+        this.tokenStorageKey = localStorageTokenKey
         this.baseUrl = baseUrl
-        this.token = token
-
-        this.loginURL = this.baseUrl + '/auth/login'
-        this.testAuthURL = this.baseUrl + '/auth/check'
-        this.testLogoutURL = this.baseUrl + '/auth/logout'
+        this.token = localStorage.getItem(localStorageTokenKey)
+        this.loginURL = '/login'
+        this.testAuthURL = '/check-auth'
+        this.testLogoutURL = '/logout'
     }
 
-    login(email, password) {
+    setToken(token) {
+        this.token = token
+        localStorage.setItem(this.tokenStorageKey, token)
+    }
+
+    login(user, password) {
         let self = this
-        return self.request(self.loginURL, { email, password }, 'POST' )
+        return self.request(self.loginURL, { user, password }, 'POST' )
     }
 
     testAuth() {
@@ -30,39 +35,41 @@ class Server {
         this.token = null
     }
 
-    request(url, data, method) {
-        if (!url || typeof url != 'string') return reject('Invalid request')
+    async request(url, data, method) {
+        if (!url || typeof url != 'string') return { status: 400, msg: `Invalid url: ${url}` }
         let self = this
         method = method || 'GET'
         data = data || {}
+       
+        let Uri = self.baseUrl + ( url[0]!='/'? '/' : '') + url
+        
+        let packet = {
+            method,
+            url: Uri,
+            headers: self.headers()
+        }
 
-        return new Promise( (resolve, reject) => {
-            let Uri = self.baseUrl + ( url[0]!='/'? '/' : '') + url
+        switch (method) {
+            case "PUT":
+            case 'POST':
+                packet.data = JSON.stringify(data)
+                break
+            case 'GET':
+                packet.params = data
+        }
 
-            let packet = {
-                method,
-                url: Uri,
-                headers: self.headers()
-            }
-            switch (method) {
-                case "PUT":
-                case 'POST':
-                    packet.data = qs.stringify(data)
-                    break
-                case 'GET':
-                    packet.params = data
-            }
-
-            Axios(packet)
-                .then(res => resolve(res.data))
-                .catch(reject)
-        })
+        try {
+            let response = await Axios(packet) 
+            return response.data
+        } catch(error) {
+            return { status: error.response.status, msg: error.response.data }
+        }
     }
 
     headers() {
         return { 
             'Content-Type': 'application/json',
-            'X-App-Token': self.token, 
+            'X-App-Token': this.token, 
         }
     }
 }

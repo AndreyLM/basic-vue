@@ -1,21 +1,29 @@
 <template>
   <v-app>
-    <v-content>
-      <router-view></router-view>
-    </v-content>
+    <component :is="layout"></component> 
   </v-app>
 </template>
 
 <script>
+import AppLayout from './layouts/AppLayout'
+import CleanLayout from './layouts/CleanLayout'
 
 export default {
   name: 'App',
-  components: {
-  },
   data () {
     return {
       //
     }
+  },
+  components: {
+    'app-layout': AppLayout,
+    'clean-layout': CleanLayout
+  },
+  computed: {
+    layout() {
+      return this.$store.getters.layout
+    }
   }
+  
 }
 </script>

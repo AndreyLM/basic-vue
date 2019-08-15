@@ -3,16 +3,23 @@
         v-flex.sm12.sm8.md4
             v-card.elevation-12
                 v-toolbar.dark(color="primary")
-                    v-toolbar-title Login Form
+                    v-toolbar-title Registration
                     v-spacer
                 v-card-text
                     v-form
                         v-text-field(
                             prepend-icon="person",
                             name="login",
-                            label="Login or email",
+                            label="Login",
                             type="text"
-                            v-model="user"
+                            v-model="login"
+                        )
+                        v-text-field(
+                            prepend-icon="email",
+                            name="email",
+                            label="Email",
+                            type="text"
+                            v-model="email"
                         )
                         v-text-field(
                             prepend-icon="lock",
@@ -21,16 +28,24 @@
                             type="password",
                             v-model="password"
                         )
+                        v-text-field(
+                            prepend-icon="lock",
+                            name="confirm_password",
+                            label="Confirm Password",
+                            type="password",
+                            v-model="confirm_password"
+                        )
                 v-card-actions
                     v-spacer
                     v-btn(
                         color="default",
-                        @click.prepend="registration"
-                    ) registration
+                        @click.prepend="toLogin"
+                    ) Login
                     v-btn(
                         color="primary",
-                        @click.prepend="login"
-                    ) Login
+                        @click.prepend="registration"
+                    ) registration
+                   
                    
                        
 
@@ -41,13 +56,20 @@ export default {
     name: "login",
     data: () => {
         return {
-            user: "",
-            password: ""
+            login: "",
+            email: "",
+            password: "",
+            confirm_password: "",
         }
     },
     methods: {
-        async login() {
-            let resp = await this.$store.dispatch("login", { user: this.user, password: this.password } )
+        async registration() {
+            let resp = await this.$store.dispatch("registration", {
+                login: this.login,
+                email: this.email,
+                password: this.password,
+                confirm_password: this.confirm_password,
+            })
             if ( resp.status != 200 ) {
                 this.$notify({
                     group: "alerts",
@@ -57,14 +79,11 @@ export default {
                 })
                 return
             }
-
             this.$router.push({ path: '/' })
         },
-        registration() {
-            this.$router.push({ path: '/registration' })
-        }
-    },
-    mouted() {
+       toLogin() {
+           this.$router.push({ path: '/login' })
+       }
     }
 }
 </script>
